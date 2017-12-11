@@ -9,7 +9,7 @@ const COLOR_MAP = {
 const PIXEL_SIZE = 6.25;
 
 const RR2KPlayer = (context) => {
-  let VELOCITY = 1;
+  let VELOCITY = 8;
   let LEFT = 0;
   let TOP = 0;
 
@@ -24,6 +24,9 @@ const RR2KPlayer = (context) => {
     0,0,2,0,2,0,2,0,0,
   ];
 
+  const update = () => {
+  };
+
   const draw = () => {
     for (var y = 0; y < 8; y++) {
       for (var x = 0; x < 9; x++) {
@@ -34,31 +37,25 @@ const RR2KPlayer = (context) => {
   };
 
   const fire = () => {
-    console.log('fire')
   };
 
   const moveUp = () => {
-    console.log('move up')
-    TOP -= 1;
+    TOP -= 1 * VELOCITY;
   };
 
   const moveDown= () => {
-    console.log('move down')
-    TOP += 1;
+    TOP += 1 * VELOCITY;
   };
 
   const moveLeft = () => {
-    console.log('move left')
-    LEFT -= 1;
+    LEFT -= 1 * VELOCITY;
   };
 
   const moveRigth = () => {
-    console.log('move right')
-    LEFT += 1;
+    LEFT += 1 * VELOCITY;
   };
 
   const handleKeyDown = function (e) {
-    console.log('key down', e.keyCode)
     switch (e.keyCode) {
       case 37:
       case 65:
@@ -80,7 +77,7 @@ const RR2KPlayer = (context) => {
         fire();
         break;
     }
-    draw();
+    window.requestAnimationFrame(draw);
   };
 
   const init = () => {
@@ -91,13 +88,13 @@ const RR2KPlayer = (context) => {
     document.removeEventListener('keydown', handleKeyDown);
   };
 
-  return { draw, init, destroy };
+  return { draw, init, destroy, update };
 };
 
 const RR2KMap = (context) => {
   const MAP_LOOP_INTERVAL = 100;
   const VELOCITY = 1;
-  let mapLoop;
+  let mapSlice;
   let sliceIndice = 0;
 
   const nextMapSlice = () => {
@@ -105,41 +102,66 @@ const RR2KMap = (context) => {
     return gameMatrix.slice(((sliceIndice * 128) * VELOCITY) * - 1, -128);
   };
 
-  const draw = () => {
-    mapSlice = nextMapSlice();
-    context.clearRect(0, 0, 800, 800);
-    for (var y = 0; y < 128; y++) {
-      for (var x = 0; x < 128; x++) {
-        context.fillStyle = COLOR_MAP[mapSlice[x + (y * 128)]];
-        context.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-      }
-    }
-  };
-
   const init = () => {
   };
 
   const destroy = () => {
   };
 
-  return { draw, init, destroy };
+  const update = () => {
+    mapSlice = nextMapSlice();
+  };
+
+  const draw = () => {
+    context.save();
+    for (var y = 0; y < 128; y++) {
+      for (var x = 0; x < 128; x++) {
+        context.fillStyle = COLOR_MAP[mapSlice[x + (y * 128)]];
+        context.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+      }
+    }
+    context.restore();
+  };
+
+  return { draw, init, destroy, update };
 };
 
 const RR2KGame = (context) => {
   const map = RR2KMap(context);
   const player = RR2KPlayer(context);
 
+  let STARTED = false;
+  let SPRITES = [];
+
+  const update = () => {
+    map.update();
+    player.update();
+  };
+
   const draw = () => {
-    context.clearRect(0, 0, 800, 800);
+    if (!STARTED) return;
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    update();
     map.draw();
     player.draw();
-    window.requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
+  };
+
+  const start = () => {
+    STARTED = true;
+    init();
+  };
+
+  const stop = () => {
+    STARTED = false;
+    map.stop();
+    player.stop();
   };
 
   const init = () => {
     map.init();
     player.init();
-    window.requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
   };
 
   const destroy = () => {
@@ -147,11 +169,11 @@ const RR2KGame = (context) => {
     map.destroy();
   };
 
-  return { init, destroy };
+  return { start, destroy };
 };
 
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 const rr2k = RR2KGame(context);
-rr2k.init();
+rr2k.start();
 })();
