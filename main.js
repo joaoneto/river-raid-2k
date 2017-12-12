@@ -9,9 +9,15 @@ const COLOR_MAP = {
 const PIXEL_SIZE = 6.25;
 
 const RR2KPlayer = (context) => {
-  let VELOCITY = 8;
+  let VELOCITY = 0.9;
   let LEFT = 0;
   let TOP = 0;
+  let ACTION = 0;
+
+  const ACTION_UP = 1;
+  const ACTION_DOWN = 4;
+  const ACTION_LEFT = 8;
+  const ACTION_RIGHT = 16;
 
   const PLAYER_NORMAL = [
     0,0,0,0,2,0,0,0,0,
@@ -25,6 +31,18 @@ const RR2KPlayer = (context) => {
   ];
 
   const update = () => {
+    if ((ACTION & ACTION_UP) == ACTION_UP) {
+      TOP -= 1 * VELOCITY;
+    }
+    if ((ACTION & ACTION_DOWN) == ACTION_DOWN) {
+      TOP += 1 * VELOCITY;
+    }
+    if ((ACTION & ACTION_LEFT) == ACTION_LEFT) {
+      LEFT -= 1 * VELOCITY;
+    }
+    if ((ACTION & ACTION_RIGHT) == ACTION_RIGHT) {
+      LEFT += 1 * VELOCITY;
+    }
   };
 
   const draw = () => {
@@ -39,53 +57,49 @@ const RR2KPlayer = (context) => {
   const fire = () => {
   };
 
-  const moveUp = () => {
-    TOP -= 1 * VELOCITY;
+  const addAction = (action) => {
+    ACTION |= action;
   };
 
-  const moveDown= () => {
-    TOP += 1 * VELOCITY;
+  const removeAction = (action) => {
+    ACTION &= ~action;
   };
 
-  const moveLeft = () => {
-    LEFT -= 1 * VELOCITY;
-  };
-
-  const moveRigth = () => {
-    LEFT += 1 * VELOCITY;
-  };
-
-  const handleKeyDown = function (e) {
+  const handleKey = () => function (e) {
     switch (e.keyCode) {
       case 37:
       case 65:
-        moveLeft();
+        e.type == 'keydown' ? addAction(ACTION_LEFT) : removeAction(ACTION_LEFT);
         break;
       case 39:
       case 68:
-        moveRigth();
+        e.type == 'keydown' ? addAction(ACTION_RIGHT) : removeAction(ACTION_RIGHT);
         break;
       case 38:
       case 87:
-        moveUp();
+        e.type == 'keydown' ? addAction(ACTION_UP) : removeAction(ACTION_UP);
         break;
       case 40:
       case 83:
-        moveDown();
+        e.type == 'keydown' ? addAction(ACTION_DOWN) : removeAction(ACTION_DOWN);
         break;
       case 32:
         fire();
         break;
     }
-    window.requestAnimationFrame(draw);
   };
+
+  const handleKeyDown = handleKey();
+  const handleKeyUp = handleKey();
 
   const init = () => {
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
   };
 
   const destroy = () => {
     document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('keyup', handleKeyUp);
   };
 
   return { draw, init, destroy, update };
@@ -134,13 +148,13 @@ const RR2KGame = (context) => {
   let SPRITES = [];
 
   const update = () => {
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     map.update();
     player.update();
   };
 
   const draw = () => {
     if (!STARTED) return;
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     update();
     map.draw();
     player.draw();
