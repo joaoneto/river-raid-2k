@@ -21,12 +21,41 @@ const sprite = (name, state, left, top) => {
   }
 };
 
+const RR2KBullets = (context) => {
+  let VELOCITY = 1.5;
+  let MAX = 2;
+
+  const bullets = [];
+
+  const spawn = (top, left) => {
+    if (bullets.length > MAX) return;
+    bullets.push({top, left});
+  };
+
+  const kill = (i) => {
+    const bullet = bullets.splice(i, 1);
+  };
+
+  const draw = () => {
+    bullets.forEach((bullet, i) => {
+      bullet.top -= 1 * VELOCITY;
+      context.fillStyle = COLOR_MAP[2];
+      context.fillRect(bullet.left * PIXEL_SIZE-1, bullet.top * PIXEL_SIZE-1, PIXEL_SIZE+1, (PIXEL_SIZE * 2)+1);
+      if (bullet.top < 0) kill(i);
+    });
+  };
+
+  return { spawn, kill, draw };
+};
+
 const RR2KPlayer = (context) => {
-  let VELOCITY = 0.9;
-  let LEFT = 0;
+  let VELOCITY = 2;
+  let LEFT = 54;
+  // let TOP = 119;
   let TOP = 0;
   let ACTION = 0;
   let STATE = 'NORMAL';
+  let bullet = RR2KBullets(context);
 
   const ACTION_UP = 1;
   const ACTION_DOWN = 4;
@@ -55,11 +84,16 @@ const RR2KPlayer = (context) => {
   };
 
   const draw = () => {
+    context.save();
+    bullet.draw();
+    context.restore();
+    context.save();
     sprite('PLAYER', STATE, LEFT, TOP);
+    context.restore();
   };
 
   const fire = () => {
-    
+    bullet.spawn(TOP, LEFT + 4);
   };
 
   const addAction = (action) => {
@@ -89,7 +123,7 @@ const RR2KPlayer = (context) => {
         e.type == 'keydown' ? addAction(ACTION_DOWN) : removeAction(ACTION_DOWN);
         break;
       case 32:
-        fire();
+        e.type == 'keydown' && fire();
         break;
     }
   };
@@ -111,7 +145,6 @@ const RR2KPlayer = (context) => {
 };
 
 const RR2KMap = (context) => {
-  const MAP_LOOP_INTERVAL = 100;
   const VELOCITY = 1;
   let mapSlice;
   let sliceIndice = 0;
@@ -136,7 +169,7 @@ const RR2KMap = (context) => {
     for (var y = 0; y < 128; y++) {
       for (var x = 0; x < 128; x++) {
         context.fillStyle = COLOR_MAP[mapSlice[x + (y * 128)]];
-        context.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+        context.fillRect(x * PIXEL_SIZE-1, y * PIXEL_SIZE-1, PIXEL_SIZE+1, PIXEL_SIZE+1);
       }
     }
     context.restore();
