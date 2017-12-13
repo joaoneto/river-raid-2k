@@ -1,60 +1,65 @@
 (function () {
 const COLOR_MAP = {
-  0: '#0000ff',
-  1: '#ffffff',
+  0: 'rgba(255,255,255,0)',
+  1: '#0000ff',
   2: '#ffff00',
-  3: '#00ff00',
-  4: '#ff00ff',
+  3: '#ffffff',
+  4: '#00ff00',
+  5: '#ff00ff',
 };
+
 const PIXEL_SIZE = 6.25;
+
+const sprite = (name, state, left, top) => {
+  const { width, height, matrix } = SPRITES[name][state];
+
+  for (var y = 0; y < height; y++) {
+    for (var x = 0; x < width; x++) {
+      context.fillStyle = COLOR_MAP[matrix[x + (y * 9)]];
+      context.fillRect((x + left) * PIXEL_SIZE-1, (y + top) * PIXEL_SIZE-1, PIXEL_SIZE+1, PIXEL_SIZE+1);
+    }
+  }
+};
 
 const RR2KPlayer = (context) => {
   let VELOCITY = 0.9;
   let LEFT = 0;
   let TOP = 0;
   let ACTION = 0;
+  let STATE = 'NORMAL';
 
   const ACTION_UP = 1;
   const ACTION_DOWN = 4;
   const ACTION_LEFT = 8;
   const ACTION_RIGHT = 16;
 
-  const PLAYER_NORMAL = [
-    0,0,0,0,2,0,0,0,0,
-    0,0,0,0,2,0,0,0,0,
-    0,0,0,2,2,2,0,0,0,
-    0,0,2,2,2,2,2,0,0,
-    0,2,0,0,2,0,0,2,0,
-    0,0,0,0,2,0,0,0,0,
-    0,0,0,2,2,2,0,0,0,
-    0,0,2,0,2,0,2,0,0,
-  ];
-
   const update = () => {
-    if ((ACTION & ACTION_UP) == ACTION_UP) {
-      TOP -= 1 * VELOCITY;
-    }
-    if ((ACTION & ACTION_DOWN) == ACTION_DOWN) {
-      TOP += 1 * VELOCITY;
-    }
-    if ((ACTION & ACTION_LEFT) == ACTION_LEFT) {
-      LEFT -= 1 * VELOCITY;
-    }
-    if ((ACTION & ACTION_RIGHT) == ACTION_RIGHT) {
-      LEFT += 1 * VELOCITY;
-    }
-  };
-
-  const draw = () => {
-    for (var y = 0; y < 8; y++) {
-      for (var x = 0; x < 9; x++) {
-        context.fillStyle = COLOR_MAP[PLAYER_NORMAL[x + (y * 9)]];
-        context.fillRect((x + LEFT) * PIXEL_SIZE, (y + TOP) * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    if (ACTION == 0) {
+      STATE = 'NORMAL';
+    } else {
+      if ((ACTION & ACTION_UP) == ACTION_UP) {
+        TOP -= 1 * VELOCITY;
+      }
+      if ((ACTION & ACTION_DOWN) == ACTION_DOWN) {
+        TOP += 1 * VELOCITY;
+      }
+      if ((ACTION & ACTION_LEFT) == ACTION_LEFT) {
+        STATE = 'TURNING_LEFT';
+        LEFT -= 1 * VELOCITY;
+      }
+      if ((ACTION & ACTION_RIGHT) == ACTION_RIGHT) {
+        STATE = 'TURNING_RIGHT';
+        LEFT += 1 * VELOCITY;
       }
     }
   };
 
+  const draw = () => {
+    sprite('PLAYER', STATE, LEFT, TOP);
+  };
+
   const fire = () => {
+    
   };
 
   const addAction = (action) => {
@@ -149,6 +154,8 @@ const RR2KGame = (context) => {
 
   const update = () => {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    context.fillStyle = COLOR_MAP[1];
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
     map.update();
     player.update();
   };
