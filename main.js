@@ -145,31 +145,45 @@ const RR2KPlayer = (context) => {
 };
 
 const RR2KMap = (context) => {
-  const VELOCITY = 1;
+  const VELOCITY = 0.09;
   let mapSlice;
   let sliceIndice = 0;
+  let TOP = -8;
 
   const nextMapSlice = () => {
     sliceIndice++;
-    return gameMatrix.slice(((sliceIndice * 128) * VELOCITY) * - 1, -128);
+    return gameMatrix.slice(sliceIndice * 256, sliceIndice * 512);
   };
 
   const init = () => {
+    mapSlice = nextMapSlice();
   };
 
   const destroy = () => {
   };
 
   const update = () => {
-    mapSlice = nextMapSlice();
+    TOP += VELOCITY;
+    if (TOP > 8) {
+      mapSlice = nextMapSlice();
+      console.log(mapSlice)
+      TOP = 0;
+    }
   };
 
   const draw = () => {
+    context.restore();
     context.save();
-    for (var y = 0; y < 128; y++) {
-      for (var x = 0; x < 128; x++) {
-        context.fillStyle = COLOR_MAP[mapSlice[x + (y * 128)]];
-        context.fillRect(x * PIXEL_SIZE-1, y * PIXEL_SIZE-1, PIXEL_SIZE+1, PIXEL_SIZE+1);
+    // for (var y = 0; y < 128; y++) {
+    //   for (var x = 0; x < 128; x++) {
+    //     context.fillStyle = COLOR_MAP[mapSlice[x + (y * 128)]];
+    //     context.fillRect(x * PIXEL_SIZE-1, y * PIXEL_SIZE-1, PIXEL_SIZE+1, PIXEL_SIZE+1);
+    //   }
+    // }
+
+    for (var y = 0; y < 16; y++) {
+      for (var x = 0; x < 16; x++) {
+        if (mapSlice[x + (y * 16)]) sprite('MAP', mapSlice[x + (y * 16)], x * 8, (y + TOP) * 8);
       }
     }
     context.restore();
