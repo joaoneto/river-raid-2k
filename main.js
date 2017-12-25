@@ -66,17 +66,17 @@ const RR2KPlayer = (context) => {
     if (ACTION == 0) {
       STATE = 'NORMAL';
     } else {
-      if ((ACTION & ACTION_UP) == ACTION_UP) {
+      if ((ACTION & ACTION_UP) == ACTION_UP && TOP > 0) {
         TOP -= 1 * VELOCITY;
       }
-      if ((ACTION & ACTION_DOWN) == ACTION_DOWN) {
+      if ((ACTION & ACTION_DOWN) == ACTION_DOWN && TOP < 119) {
         TOP += 1 * VELOCITY;
       }
-      if ((ACTION & ACTION_LEFT) == ACTION_LEFT) {
+      if ((ACTION & ACTION_LEFT) == ACTION_LEFT && LEFT > 0) {
         STATE = 'TURNING_LEFT';
         LEFT -= 1 * VELOCITY;
       }
-      if ((ACTION & ACTION_RIGHT) == ACTION_RIGHT) {
+      if ((ACTION & ACTION_RIGHT) == ACTION_RIGHT && LEFT < 119) {
         STATE = 'TURNING_RIGHT';
         LEFT += 1 * VELOCITY;
       }
