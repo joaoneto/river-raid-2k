@@ -251,11 +251,23 @@ class Player extends Component {
       this.sprites.set(key, new Sprite(width, height, this._scale, matrix));
     });
 
+    this.transform.position.x = 400 - (this.sprites.get(this._state).width / 2);
     this.transform.position.y = 800 - this.sprites.get(this._state).height;
   }
 
   getSprite() {
     return this.sprites.get(this._state);
+  }
+
+  getBoxColider() {
+    return {
+      width: this.sprites.get('IDLE')?.width || 0,
+      height: this.sprites.get('IDLE')?.height || 0
+    };
+  }
+
+  onCollision(other) {
+    console.log('collision', other);
   }
 
   update() {
@@ -276,6 +288,31 @@ class Player extends Component {
   }
 }
 
+class Player2 extends Component {
+  _state = 'IDLE';
+
+  start() {
+    Object.keys(SPRITES.PLAYER).forEach((key) => {
+      const { width, height, matrix } = SPRITES.PLAYER[key];
+      this.sprites.set(key, new Sprite(width, height, 7, matrix));
+    });
+
+    this.transform.position.x = 400 - (this.sprites.get(this._state).width / 2) + 55;
+    this.transform.position.y = 800 - this.sprites.get(this._state).height;
+  }
+
+  getBoxColider() {
+    return {
+      width: this.sprites.get('IDLE')?.width || 0,
+      height: this.sprites.get('IDLE')?.height || 0
+    };
+  }
+
+  getSprite() {
+    return this.sprites.get(this._state);
+  }
+}
+
 
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
@@ -283,6 +320,7 @@ const context = canvas.getContext('2d');
 // rr2k.start();
 
 Registry.register('Player', new Player());
+Registry.register('Player2', new Player2());
 
 const engine = new Engine(context);
 engine.start();

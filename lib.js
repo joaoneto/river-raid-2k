@@ -1,30 +1,23 @@
-const COLOR_MAP = {
-  0: 'rgba(255,255,255,0)',
-  1: '#0000ff',
-  2: '#ffff00',
-  3: '#ffffff',
-  4: '#00ff00',
-  5: '#ff00ff',
-};
-
 class Point {
   x = 0;
   y = 0;
   z = 0;
-
-  static zero = new Point(0, 0, 0);
 
   constructor(x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
   }
+
+  static zero() {
+    return new Point(0, 0, 0);
+  }
 }
 
 class Trasform {
-  position = Point.zero;
+  position = Point.zero();
 
-  constructor(position = Point.zero) {
+  constructor(position = Point.zero()) {
     this.position = position;
   }
 }
@@ -117,7 +110,7 @@ class Sprite {
 
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
-        tmpContext.fillStyle = COLOR_MAP[matrix[x + (y * height)]];
+        tmpContext.fillStyle = PALETTE[matrix[x + (y * height)]];
         tmpContext.fillRect(x * scale - 1, y * scale - 1, scale + 1, scale + 1);
       }
     }
@@ -131,8 +124,22 @@ class Component {
   transform = new Trasform();
   sprites = new Map();
 
+  constructor() {
+    this.transform = new Trasform();
+  }
+
   getSprite() {
     throw new Error('Component.getSprite() must be implemented');
+  }
+
+  getBoxColider() {
+    return {
+      width: this.sprites.get('default')?.width || 0,
+      height: this.sprites.get('default')?.height || 0
+    };
+  }
+
+  onCollision() {
   }
 
   start() {
@@ -186,6 +193,23 @@ class Engine {
       Time.update();
       this.fps = 1000 / Time.deltaTime;
       this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
+      Registry.getComponents().forEach((component) => {
+        Registry.getComponents().forEach((otherComponent) => {
+          if (component === otherComponent) return;
+          const coliderA = component.getBoxColider();
+          const coliderB = otherComponent.getBoxColider();
+          const a = component.transform.position;
+          const b = otherComponent.transform.position;
+          const x = Math.abs(a.x - b.x);
+          const y = Math.abs(a.y - b.y);
+          if (x < coliderA.width / 2 + coliderB.width / 2 && y < coliderA.height / 2 + coliderB.height / 2) {
+            component.onCollision(otherComponent);
+            otherComponent.onCollision(component);
+          }
+        });
+      });
+
       Registry.getComponents().forEach((component) => {
         component.update();
         this.ctx.drawImage(component.getSprite().image, component.transform.position.x, component.transform.position.y);
