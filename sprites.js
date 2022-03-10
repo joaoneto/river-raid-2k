@@ -2,8 +2,8 @@
 exports.SPRITES = {};
 
 exports.SPRITES.PLAYER = {
-  NORMAL: {
-    width: 8,
+  IDLE: {
+    width: 9,
     height: 9,
     matrix: [
       0,0,0,0,2,0,0,0,0,
@@ -18,7 +18,7 @@ exports.SPRITES.PLAYER = {
     ]
   },
   TURNING_LEFT: {
-    width: 8,
+    width: 9,
     height: 9,
     matrix: [
       0,0,0,0,2,0,0,0,0,
@@ -33,7 +33,7 @@ exports.SPRITES.PLAYER = {
     ]
   },
   TURNING_RIGHT: {
-    width: 8,
+    width: 9,
     height: 9,
     matrix: [
       0,0,0,0,2,0,0,0,0,
