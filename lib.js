@@ -25,9 +25,11 @@ class Random {
 
 class Trasform {
   position = Point.zero();
+  parent = null;
 
   constructor(position) {
     this.position = position || Point.zero();
+    this.parent = null;
   }
 }
 
@@ -51,7 +53,7 @@ class Utils {
     return a + (b - a) * t;
   }
 
-  static perlinNoise(x, y) {
+  static noise(x, y) {
     const n = x + y * 57;
     return (1 + Math.sin(n)) / 2;
   }
@@ -61,11 +63,28 @@ class Registry {
   static components = new Map();
 
   static register(name, component) {
+    component.start();
     Registry.components.set(name, component);
+  }
+
+  static get(name) {
+    return Registry.components.get(name);
   }
 
   static getComponents() {
     return Registry.components;
+  }
+
+  static remove(name) {
+    const currentComponent = Registry.get(name);
+
+    Registry.getComponents().forEach((childComponent, childName) => {
+      if (childComponent.transform.parent?.name === currentComponent.name) {
+        Registry.components.delete(childName);
+      }
+    });
+    
+    Registry.components.delete(name);
   }
 }
 
@@ -180,9 +199,6 @@ class Engine {
   }
 
   start() {
-    Registry.getComponents().forEach((component) => {
-      component.start();
-    });
     this.resume();
   }
 
@@ -218,10 +234,12 @@ class Engine {
           if (component === otherComponent) return;
           const coliderA = component.getBoxColider();
           const coliderB = otherComponent.getBoxColider();
-          const a = component.transform.position;
+          const parentAPosition = component.transform.parent?.transform.position || Point.zero();
+          const parentBPosition = otherComponent.transform.parent?.transform.position || Point.zero();
+          const a = component.transform.position
           const b = otherComponent.transform.position;
-          const x = Math.abs(a.x - b.x);
-          const y = Math.abs(a.y - b.y);
+          const x = Math.abs(a.x - parentAPosition.x - b.x - parentBPosition.x);
+          const y = Math.abs(a.y - parentAPosition.y - b.y - parentBPosition.y);
           if (x < coliderA.width / 2 + coliderB.width / 2 && y < coliderA.height / 2 + coliderB.height / 2) {
             component.onCollision(otherComponent);
             otherComponent.onCollision(component);
@@ -233,7 +251,12 @@ class Engine {
         component.update();
         const sprite = component.getSprite();
         if (sprite?.image) {
-          this.ctx.drawImage(sprite.image, component.transform.position.x, component.transform.position.y);
+          const parentPosition = component.transform.parent?.transform.position || Point.zero();
+          this.ctx.drawImage(
+            sprite.image,
+            component.transform.position.x - parentPosition.x,
+            component.transform.position.y - parentPosition.y,
+          );
         }
       });
 

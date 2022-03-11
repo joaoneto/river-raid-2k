@@ -49,11 +49,12 @@ class Player extends Component {
   }
 }
 
+const grassSprite = new Sprite(1, 1, 50, [4]);
 class Grass extends Component {
   skipColision = true;
 
   start() {
-    this.sprites.set('default', new Sprite(1, 1, 20, [4]));
+    this.sprites.set('default', grassSprite);
   }
 
   getSprite() {
@@ -74,89 +75,107 @@ class Ship extends Component {
 }
 
 class MapChunk extends Component {
-  grassCount = 0;
-  enemyCount = 0;
+  _grassCount = 0;
+  _enemyCount = 0;
 
-  _tileSize = 20;
+  _tileSize = 50;
   _mapSize = {
-    width: 800 / 20,
-    height: 800 / 20
+    width: 800 / 50,
+    height: 800 / 50
   };
   
-  start() {
+  constructor(position) {
+    super(position);
+    this.name = `MapChunk-${mapLevel}`;
     this._build();
   }
 
   _spawnTile(position) {
-    const newGrass = new Grass();
-    newGrass.transform.position = position;
-    Registry.register(`Grass${this.grassCount++}`, newGrass);
+    const grassComponent = new Grass(position);
+    grassComponent.transform.parent = this;
+    Registry.register(`Grass:${this.name}:${this._grassCount}`, grassComponent);
+    this._grassCount++;
   }
 
   _spawnEnemy(position) {
     const enemyType = Random.range(0, 2);
+    let enemyComponent;
 
     switch (enemyType) {
       case 0:
-        Registry.register(`Enemy${this.enemyCount++}`, new Helicopter(position));
+        enemyComponent = new Helicopter(position);
         break;
       case 1:
-        Registry.register(`Enemy${this.enemyCount++}`, new Ship(position));
+        enemyComponent = new Ship(position);
         break;
-    }
+      }
+
+      enemyComponent.transform.parent = this;
+      Registry.register(`Enemy:${this.name}:${this._enemyCount}`, enemyComponent);
+      this._enemyCount++;
   }
 
   _build() {
-    const randomSeed = Random.seed;
-    const frequency = 0.001;
-    const seed = MapManager.mapLevel +  1 * randomSeed * 0.001;
+    const randomSeed = Random.range(0.001, 1.001);
+    const frequency = 0.004;
+    const seed = mapLevel +  1 * randomSeed * 0.0016;
     
     for (let y = 0; y < this._mapSize.height; y++) {
-      const noiseWidth = Math.round(Utils.perlinNoise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 4) / 2);
+      const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 6) / 2));
 
       for (let x = 0; x < noiseWidth; x++) {
         this._spawnTile(new Point(x * this._tileSize, y * this._tileSize));
-        this._spawnTile(new Point((this._mapSize.width * this._tileSize) - (x * this._tileSize), y * this._tileSize));
+        this._spawnTile(new Point((this._mapSize.width * this._tileSize) - ((x+1) * this._tileSize), y * this._tileSize));
       }
     }
   }
 
-  uppdate() {
-
+  update() {
+    this.transform.position.y -= 0.16 * Time.deltaTime;
+    if (this.transform.position.y < -800) {
+      mapManager.spawnMapChunk();
+      Registry.remove(this.name);
+    }
   }
 }
 
-class MapManager extends Component {
-  static mapLevel = 0;
+let mapLevel = 0;
 
-  start() {
+class MapManager {
+  constructor() {
     Random.seed = 12345;
-    for (let i = MapManager.mapLevel; i < 4; i++) {
-        this.spawnMapChunk();
+    for (let i = mapLevel; i < 3; i++) {
+        this.spawnMapChunk(i);
     }
   }
 
-  spawnMapChunk() {
-    console.log('spawnMapChunk');
-    const newMapChunk = new MapChunk(new Point(0, MapManager.mapLevel * -800));
-    console.log('newMapChunk', newMapChunk.transform.position);
-    // newMapChunk.transform.position = new Point(0, MapManager.mapLevel * -800);
-    Registry.register(`MapChunk${MapManager.mapLevel++}`, newMapChunk);
-    MapManager.mapLevel++;
+  spawnMapChunk(i = 1) {
+    const newMapChunk = new MapChunk(new Point(0, i * 800));
+    Registry.register(`MapChunk-${mapLevel}`, newMapChunk);
+    mapLevel++;
   }
 }
 
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
+const mapManager = new MapManager();
 Registry.register('Player', new Player());
-Registry.register('MapManager', new MapManager());
-
-// const newGrass = new Grass();
-// newGrass.transform.position = new Point(400, 800);
-// Registry.register(`Grass${MapManager.grassCount++}`, newGrass);
 
 const engine = new Engine(context);
 engine.start();
 
+const pauseGame = document.createElement('button');
+pauseGame.innerText = 'Pause Game';
+pauseGame.onclick = () => {
+  engine.pause();
+}
+document.body.appendChild(pauseGame);
+
+const resumeGame = document.createElement('button');
+resumeGame.innerText = 'Resume Game';
+resumeGame.onclick = () => {
+  engine.resume();
+}
+document.body.appendChild(resumeGame);
 })();
