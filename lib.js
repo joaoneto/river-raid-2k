@@ -14,11 +14,20 @@ class Point {
   }
 }
 
+class Random {
+  static seed = 0;
+
+  static range(min, max) {
+    const x = Math.sin(Random.seed++) * 10000;
+    return Math.floor(min + x % (max - min));
+  }
+}
+
 class Trasform {
   position = Point.zero();
 
-  constructor(position = Point.zero()) {
-    this.position = position;
+  constructor(position) {
+    this.position = position || Point.zero();
   }
 }
 
@@ -40,6 +49,11 @@ class Time {
 class Utils {
   static lerp(a, b, t) {
     return a + (b - a) * t;
+  }
+
+  static perlinNoise(x, y) {
+    const n = x + y * 57;
+    return (1 + Math.sin(n)) / 2;
   }
 }
 
@@ -123,13 +137,13 @@ class Sprite {
 class Component {
   transform = new Trasform();
   sprites = new Map();
+  skipColision = false;
 
-  constructor() {
-    this.transform = new Trasform();
+  constructor(position) {
+    this.transform = new Trasform(position);
   }
 
   getSprite() {
-    throw new Error('Component.getSprite() must be implemented');
   }
 
   getBoxColider() {
@@ -195,7 +209,12 @@ class Engine {
       this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
       Registry.getComponents().forEach((component) => {
-        Registry.getComponents().forEach((otherComponent) => {
+        const filteredComponents = new Map(
+          Array.from(Registry.getComponents()).filter(([key, value]) => {
+            return value !== component && !value.skipColision;
+          })
+        );
+        filteredComponents.forEach((otherComponent) => {
           if (component === otherComponent) return;
           const coliderA = component.getBoxColider();
           const coliderB = otherComponent.getBoxColider();
@@ -212,8 +231,12 @@ class Engine {
 
       Registry.getComponents().forEach((component) => {
         component.update();
-        this.ctx.drawImage(component.getSprite().image, component.transform.position.x, component.transform.position.y);
+        const sprite = component.getSprite();
+        if (sprite?.image) {
+          this.ctx.drawImage(sprite.image, component.transform.position.x, component.transform.position.y);
+        }
       });
+
       this.frameId = requestAnimationFrame(loop);
     };
     loop();
