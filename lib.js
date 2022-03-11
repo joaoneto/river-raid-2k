@@ -1,16 +1,14 @@
 class Point {
   x = 0;
   y = 0;
-  z = 0;
 
   constructor(x, y, z) {
     this.x = x;
     this.y = y;
-    this.z = z;
   }
 
   static zero() {
-    return new Point(0, 0, 0);
+    return new Point(0, 0);
   }
 }
 
@@ -25,10 +23,12 @@ class Random {
 
 class Trasform {
   position = Point.zero();
+  scale = Point.zero();
   parent = null;
 
   constructor(position) {
     this.position = position || Point.zero();
+    this.scale = new Point(1, 1);
     this.parent = null;
   }
 }
@@ -256,6 +256,8 @@ class Engine {
             sprite.image,
             component.transform.position.x - parentPosition.x,
             component.transform.position.y - parentPosition.y,
+            sprite.width * component.transform.scale.x,
+            sprite.height * component.transform.scale.y
           );
         }
       });
