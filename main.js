@@ -26,7 +26,7 @@ class Player extends Component {
   }
 
   onCollision(other) {
-    // console.log('collision', other);
+    console.log('collision', other);
   }
 
   update() {
@@ -49,7 +49,7 @@ class Player extends Component {
   }
 }
 
-const grassSprite = new Sprite(1, 1, 50, [4]);
+const grassSprite = new Sprite(1, 1, 8, [4]);
 class Grass extends Component {
   skipColision = true;
 
@@ -78,10 +78,10 @@ class MapChunk extends Component {
   _grassCount = 0;
   _enemyCount = 0;
 
-  _tileSize = 50;
+  _tileSize = 8;
   _mapSize = {
-    width: 800 / 50,
-    height: 800 / 50
+    width: 800 / 8,
+    height: 800 / 8
   };
   
   constructor(position) {
@@ -90,9 +90,10 @@ class MapChunk extends Component {
     this._build();
   }
 
-  _spawnTile(position) {
+  _spawnTile(position, noiseWidth = 1) {
     const grassComponent = new Grass(position);
     grassComponent.transform.parent = this;
+    grassComponent.transform.scale.x = noiseWidth;
     Registry.register(`Grass:${this.name}:${this._grassCount}`, grassComponent);
     this._grassCount++;
   }
@@ -122,11 +123,10 @@ class MapChunk extends Component {
     
     for (let y = 0; y < this._mapSize.height; y++) {
       const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 6) / 2));
-
-      for (let x = 0; x < noiseWidth; x++) {
-        this._spawnTile(new Point(x * this._tileSize, y * this._tileSize));
-        this._spawnTile(new Point((this._mapSize.width * this._tileSize) - ((x+1) * this._tileSize), y * this._tileSize));
-      }
+      // left grass
+      this._spawnTile(new Point(0, y * this._tileSize), noiseWidth);
+      // right grass
+      this._spawnTile(new Point((this._mapSize.width * this._tileSize) - ((noiseWidth+1) * this._tileSize), y * this._tileSize), noiseWidth);
     }
   }
 
@@ -144,7 +144,7 @@ let mapLevel = 0;
 class MapManager {
   constructor() {
     Random.seed = 12345;
-    for (let i = mapLevel; i < 3; i++) {
+    for (let i = mapLevel; i < 2; i++) {
         this.spawnMapChunk(i);
     }
   }
