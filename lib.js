@@ -186,7 +186,6 @@ class Component {
 }
 
 class Engine {
-  frameId = 0;
   fps = 0;
   paused = false;
   /**
@@ -204,13 +203,14 @@ class Engine {
   }
 
   reset() {
-    this.frameId = 0;
     this.fps = 0;
     this.paused = false;
   }
 
   start() {
-    this.resume();
+    if (!this.paused) {
+      this._executeUpdateLoop();
+    }
   }
 
   stop() {
@@ -219,20 +219,25 @@ class Engine {
   }
 
   pause() {
-    cancelAnimationFrame(this.frameId);
-    Input.unlisten();
+    if (!this.paused) {
+      Input.unlisten();
+      this.paused = true;
+    }
   }
 
   resume() {
-    Input.listen();
-    this.update();
+    if (this.paused) {
+      Input.listen();
+      this.paused = false;
+      this.start();
+    }
   }
 
   _executeLater(fn) {
     requestAnimationFrame(fn);
   }
 
-  update() {
+  _executeUpdateLoop() {
     const loop = () => {
       if (this.paused) return;
       Time.update();
@@ -307,9 +312,10 @@ class Engine {
         }
       });
 
-      this.frameId = requestAnimationFrame(loop);
+      requestAnimationFrame(loop);
     };
-    loop();
+
+    requestAnimationFrame(loop);
   }
 }
 
