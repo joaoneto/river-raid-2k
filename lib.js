@@ -209,6 +209,7 @@ class Engine {
 
   start() {
     if (!this.paused) {
+      Input.listen();
       this._executeUpdateLoop();
     }
   }
