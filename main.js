@@ -88,7 +88,7 @@ class MapChunk extends Component {
   
   constructor(position) {
     super(position);
-    this.name = `MapChunk-${mapLevel}`;
+    this.name = `MapChunk:${mapLevel}`;
     this._build();
   }
 
@@ -124,7 +124,7 @@ class MapChunk extends Component {
     const seed = randomSeed * 0.0016;
     
     for (let y = 0; y < this._mapSize.height; y++) {
-      const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 20) / 2));
+      const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 10) / 2));
       // left grass
       this._spawnTile(new Point(0, y * this._tileSize), noiseWidth);
       // right grass
@@ -134,7 +134,7 @@ class MapChunk extends Component {
 
   update() {
     this.transform.position.y -= 0.16 * Time.deltaTime;
-    if (this.transform.position.y < -800) {
+    if (this.transform.position.y < -790) {
       mapManager.spawnMapChunk();
       Registry.remove(this.name);
     }
@@ -147,13 +147,14 @@ class MapManager {
   constructor() {
     Random.seed = 12345;
     for (let i = mapLevel; i < 2; i++) {
-        this.spawnMapChunk(i);
+        this.spawnMapChunk();
     }
   }
 
-  spawnMapChunk(i = 1) {
-    const newMapChunk = new MapChunk(new Point(0, i * 800));
-    Registry.register(`MapChunk-${mapLevel}`, newMapChunk);
+  spawnMapChunk() {
+    const previousMapChunkPositionY = Registry.get(`MapChunk:${mapLevel - 1}`)?.transform.position.y || -790;
+    const newMapChunk = new MapChunk(new Point(0, previousMapChunkPositionY + 800));
+    Registry.register(`MapChunk:${mapLevel}`, newMapChunk);
     mapLevel++;
   }
 }
