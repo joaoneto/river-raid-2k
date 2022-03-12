@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+main {
+  display: flex;
+}
+
+#description {
+  flex: 0 1 320px;
+  margin: 1rem;
+}
+
+#game {
+  position: relative;
+  margin: 1rem;
+}
+
+#debug {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  opacity: .8;
+  pointer-events: none;
+}

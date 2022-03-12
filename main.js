@@ -20,6 +20,8 @@ class Player extends Component {
 
   getBoxColider() {
     return {
+      x: this.transform.position.x ,
+      y: this.transform.position.y,
       width: this.sprites.get('IDLE')?.width || 0,
       height: this.sprites.get('IDLE')?.height || 0
     };
@@ -118,11 +120,11 @@ class MapChunk extends Component {
 
   _build() {
     const randomSeed = Random.range(0.001, 1.001);
-    const frequency = 0.004;
-    const seed = mapLevel +  1 * randomSeed * 0.0016;
+    const frequency = 0.002;
+    const seed = randomSeed * 0.0016;
     
     for (let y = 0; y < this._mapSize.height; y++) {
-      const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 6) / 2));
+      const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 20) / 2));
       // left grass
       this._spawnTile(new Point(0, y * this._tileSize), noiseWidth);
       // right grass
@@ -156,26 +158,25 @@ class MapManager {
   }
 }
 
+DEBUG = true;
+
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
+
+const engineLayers = { context };
+
+if (DEBUG) {
+  const debugCanvas = document.getElementById('debug');
+  const debugContext = debugCanvas.getContext('2d');
+  engineLayers.debugContext = debugContext;
+}
 
 const mapManager = new MapManager();
 Registry.register('Player', new Player());
 
-const engine = new Engine(context);
+const engine = new Engine(engineLayers);
 engine.start();
 
-const pauseGame = document.createElement('button');
-pauseGame.innerText = 'Pause Game';
-pauseGame.onclick = () => {
-  engine.pause();
-}
-document.body.appendChild(pauseGame);
-
-const resumeGame = document.createElement('button');
-resumeGame.innerText = 'Resume Game';
-resumeGame.onclick = () => {
-  engine.resume();
-}
-document.body.appendChild(resumeGame);
+document.querySelector('.pause-game').onclick = () => engine.pause();
+document.querySelector('.resume-game').onclick = () => engine.resume();
 })();

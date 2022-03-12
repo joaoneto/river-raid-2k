@@ -166,9 +166,12 @@ class Component {
   }
 
   getBoxColider() {
+    const parentTransform = this.transform.parent?.transform || new Trasform();
     return {
-      width: this.sprites.get('default')?.width || 0,
-      height: this.sprites.get('default')?.height || 0
+      x: this.transform.position.x - parentTransform.position.x,
+      y: this.transform.position.y - parentTransform.position.y,
+      width: this.sprites.get('default')?.width * this.transform.scale.x || 0,
+      height: this.sprites.get('default')?.height * this.transform.scale.y || 0
     };
   }
 
@@ -186,10 +189,18 @@ class Engine {
   frameId = 0;
   fps = 0;
   paused = false;
-  ctx = null;
+  /**
+   * @type {CanvasRenderingContext2D}
+   */
+  context = null;
+  /**
+   * @type {CanvasRenderingContext2D}
+   */
+  debugContext = null;
 
-  constructor(ctx) {
-    this.ctx = ctx;
+  constructor({ context, debugContext }) {
+    this.context = context;
+    this.debugContext = debugContext;
   }
 
   reset() {
@@ -217,33 +228,54 @@ class Engine {
     this.update();
   }
 
+  _executeLater(fn) {
+    requestAnimationFrame(fn);
+  }
+
   update() {
     const loop = () => {
       if (this.paused) return;
       Time.update();
       this.fps = 1000 / Time.deltaTime;
-      this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+      this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
 
-      Registry.getComponents().forEach((component) => {
-        const filteredComponents = new Map(
-          Array.from(Registry.getComponents()).filter(([key, value]) => {
-            return value !== component && !value.skipColision;
-          })
-        );
-        filteredComponents.forEach((otherComponent) => {
-          if (component === otherComponent) return;
-          const coliderA = component.getBoxColider();
-          const coliderB = otherComponent.getBoxColider();
-          const parentAPosition = component.transform.parent?.transform.position || Point.zero();
-          const parentBPosition = otherComponent.transform.parent?.transform.position || Point.zero();
-          const a = component.transform.position
-          const b = otherComponent.transform.position;
-          const x = Math.abs(a.x - parentAPosition.x - b.x - parentBPosition.x);
-          const y = Math.abs(a.y - parentAPosition.y - b.y - parentBPosition.y);
-          if (x < coliderA.width / 2 + coliderB.width / 2 && y < coliderA.height / 2 + coliderB.height / 2) {
-            component.onCollision(otherComponent);
-            otherComponent.onCollision(component);
-          }
+      // low priority
+      this._executeLater(() => {
+        if (DEBUG) {
+          this.debugContext.clearRect(0, 0, this.debugContext.canvas.width, this.debugContext.canvas.height);
+          this.debugContext.font = '12px Arial';
+          this.debugContext.fillStyle = '#000';
+          this.debugContext.fillText(`FPS: ${this.fps}`, 10, 20);
+          this.debugContext.fillText(`Last time: ${Time.lastTime}`, 10, 40);
+          this.debugContext.fillText(`Delta: ${Time.deltaTime}`, 10, 60);
+        }
+
+        Registry.getComponents().forEach((component) => {
+          const filteredComponents = new Map(
+            Array.from(Registry.getComponents()).filter(([key, value]) => {
+              return value !== component && !value.skipColision;
+            })
+          );
+          filteredComponents.forEach((otherComponent) => {
+            if (component === otherComponent) return;
+            const a = component.getBoxColider();
+            const b = otherComponent.getBoxColider();
+
+            if (
+              a.x < b.x + b.width &&
+              a.x + a.width > b.x &&
+              a.y < b.y + b.height &&
+              a.height + a.y > b.y
+            ) {
+              component.onCollision(otherComponent);
+              otherComponent.onCollision(component);
+              if (DEBUG) {
+                this.debugContext.fillStyle = '#F00';
+                this.debugContext.fillRect(a.x, a.y, a.width, a.height);
+                this.debugContext.fillRect(b.x, b.y, b.width, b.height);
+              }
+            }
+          });
         });
       });
 
@@ -252,13 +284,26 @@ class Engine {
         const sprite = component.getSprite();
         if (sprite?.image) {
           const parentPosition = component.transform.parent?.transform.position || Point.zero();
-          this.ctx.drawImage(
+          this.context.drawImage(
             sprite.image,
             component.transform.position.x - parentPosition.x,
             component.transform.position.y - parentPosition.y,
             sprite.width * component.transform.scale.x,
             sprite.height * component.transform.scale.y
           );
+
+          this._executeLater(() => {
+            if (DEBUG) {
+              this.debugContext.strokeStyle = '#00F';
+              this.debugContext.lineWidth = 1;
+              this.debugContext.strokeRect(
+                component.transform.position.x - parentPosition.x,
+                component.transform.position.y - parentPosition.y,
+                sprite.width * component.transform.scale.x,
+                sprite.height * component.transform.scale.y,
+              );
+            }
+          });
         }
       });
 

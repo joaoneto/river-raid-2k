@@ -1,9 +1,47 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>rr2k</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="It's a intuitive remake game of River Raid. The motivation is just fun in coding, there is no commercial purpose.">
+  <meta name="keywords" content="javascript,canvas,games,retro,atari,river-raid,river-raid-2k,engine,unity">
+  <meta name="author" content="João Neto">
+  <meta name="robots" content="index,follow">
+  <meta name="googlebot" content="index,follow">
+  <meta name="revisit-after" content="1 days">
+  <meta name="language" content="en">
+  <meta name="rating" content="general">
+  <meta name="distribution" content="global">
+  <meta property="og:title" content="river-raid-2k">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://joaoneto.github.io/river-raid-2k/">
+  <meta property="og:image" content="http://joaoneto.github.io/river-raid-2k/rr2k.png">
+  <meta property="og:description" content="It's a intuitive remake game of River Raid. The motivation is just fun in coding, there is no commercial purpose.">
+  <meta property="og:site_name" content="river-raid-2k">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="pt_BR">
+  <link rel="stylesheet" href="styles.css">
+  <title>river-raid-2k</title>
 </head>
 <body>
-  <canvas id="canvas" width="800" height="800"></canvas>
+  <main>
+    <section id="description">
+      <h1>River Raid 2k</h1>
+      <p>It's a intuitive remake game of River Raid. The motivation is just fun in coding, there is no commercial purpose.</p>
+      <p>The game is made with javascript, canvas and a lot of fun.</p>
+      <a href="https://github.com/joaoneto/river-raid-2k">view on GitHub</a>
+      <div>
+        <button type="button" class="pause-game">Pause Game</button>
+        <button type="button" class="resume-game">Resume Game</button>
+      </div>
+    </section>
+    <section id="game">
+      <canvas id="canvas" width="800" height="800"></canvas>
+      <canvas id="debug" width="800" height="800"></canvas>
+    </section>
+  </main>
+
   <script src="palette.js"></script>
   <script src="sprites.js"></script>
   <script src="lib.js"></script>
