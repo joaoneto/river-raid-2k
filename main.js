@@ -69,7 +69,7 @@ class Grass extends Component {
 class Helicopter extends Component {
   start() {
     const { width, height, matrix } = SPRITES.HELICOPTER.IDLE;
-    this.sprites.set('default', new Sprite(width, height, 6, matrix));
+    this.sprites.set('default', new Sprite(width, height, 4, matrix));
   }
 
   getSprite() {
@@ -184,13 +184,7 @@ class MapManager {
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
-const engineLayers = { context };
-
-if (DEBUG) {
-  const debugCanvas = document.getElementById('debug');
-  const debugContext = debugCanvas.getContext('2d');
-  engineLayers.debugContext = debugContext;
-}
+const engineLayers = { context, debugContext: null };
 
 const mapManager = new MapManager();
 Registry.register('Player', new Player());
@@ -200,4 +194,15 @@ engine.start();
 
 document.querySelector('.pause-game').onclick = () => engine.pause();
 document.querySelector('.resume-game').onclick = () => engine.resume();
+document.querySelector('.toggle-debug').onclick = () => {
+  DEBUG = !DEBUG;
+  const debubCanvas = document.getElementById('debug');
+  if (DEBUG) {
+    debubCanvas.style.display = 'block';
+    engine.debugContext =  debubCanvas.getContext('2d');
+  } else {
+    debubCanvas.style.display = 'none';
+    engine.debugContext = null;
+  }
+}
 })();
