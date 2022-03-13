@@ -68,13 +68,23 @@ class Grass extends Component {
 
 class Helicopter extends Component {
   start() {
-    this.sprites.set('default', new Sprite(10, 10, 6, SRITES.HELICOPTER));
+    const { width, height, matrix } = SPRITES.HELICOPTER.IDLE;
+    this.sprites.set('default', new Sprite(width, height, 6, matrix));
+  }
+
+  getSprite() {
+    return this.sprites.get('default');
   }
 }
 
 class Ship extends Component {
   start() {
-    this.sprites.set('default', new Sprite(10, 10, 6, SRITES.SHIP));
+    const { width, height, matrix } = SPRITES.SHIP.IDLE;
+    this.sprites.set('default', new Sprite(width, height, 6, matrix));
+  }
+
+  getSprite() {
+    return this.sprites.get('default');
   }
 }
 
@@ -102,7 +112,7 @@ class MapChunk extends Component {
   }
 
   _spawnEnemy(position) {
-    const enemyType = Random.range(0, 2);
+    const enemyType = Random.range(0, 1);
     let enemyComponent;
 
     switch (enemyType) {
@@ -129,6 +139,12 @@ class MapChunk extends Component {
       const noiseWidth = 1 + Math.floor(noiseFactor * halfMapWidth);
       // left grass
       this._spawnTile(new Point(0, y * TILE_SIZE), noiseWidth);
+      
+      // enemies
+      if (y %  4 == 0) {
+        this._spawnEnemy(new Point((halfMapWidth + (halfMapWidth - noiseWidth - 6) * 2) * TILE_SIZE, y * TILE_SIZE));
+      }
+      
       //  middle grass
       if (noiseWidth + 7 < halfMapWidth && y < this._mapSize.height - 3) {
         this._spawnTile(new Point((noiseWidth + 7) * TILE_SIZE, y * TILE_SIZE), (halfMapWidth - noiseWidth - 7) * 2);
