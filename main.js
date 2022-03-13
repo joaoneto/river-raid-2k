@@ -28,7 +28,7 @@ class Player extends Component {
   }
 
   onCollision(other) {
-    console.log('collision', other);
+    // console.log('collision', other);
   }
 
   update() {
@@ -45,13 +45,15 @@ class Player extends Component {
         this._state = 'IDLE';
     }
 
-    this.transform.position.x += directionX * this._acceleration * Time.deltaTime;
-    // this.transform.position.y -= 0.2 * Time.deltaTime;
-    // context.translate(0, 0.2 * Time.deltaTime);
+    this.transform.position.x = Utils.interpolate(
+      this.transform.position.x,
+      this.transform.position.x + (directionX * this._acceleration),
+      Time.deltaTime * 0.6
+    );
   }
 }
 
-const grassSprite = new Sprite(1, 1, 8, [4]);
+const grassSprite = new Sprite(1, 1, TILE_SIZE, [4]);
 class Grass extends Component {
   skipColision = true;
 
@@ -80,10 +82,9 @@ class MapChunk extends Component {
   _grassCount = 0;
   _enemyCount = 0;
 
-  _tileSize = 8;
   _mapSize = {
-    width: 800 / 8,
-    height: 800 / 8
+    width: 800 / TILE_SIZE,
+    height: 800 / TILE_SIZE
   };
   
   constructor(position) {
@@ -119,16 +120,21 @@ class MapChunk extends Component {
   }
 
   _build() {
-    const randomSeed = Random.range(0.001, 1.001);
-    const frequency = 0.002;
-    const seed = randomSeed * 0.0016;
+    const frequency = 0.068;
+    const seed = Random.range(-10, this._mapSize.width);
+    const halfMapWidth = this._mapSize.width / 2;
     
     for (let y = 0; y < this._mapSize.height; y++) {
-      const noiseWidth = Math.max(1, Math.round(Utils.noise(seed * frequency, (y + seed) * frequency) * (this._mapSize.width - 10) / 2));
+      const noiseFactor = Math.abs(Utils.perlin(seed * frequency, (y + seed) * frequency));
+      const noiseWidth = 1 + Math.floor(noiseFactor * halfMapWidth);
       // left grass
-      this._spawnTile(new Point(0, y * this._tileSize), noiseWidth);
+      this._spawnTile(new Point(0, y * TILE_SIZE), noiseWidth);
+      //  middle grass
+      if (noiseWidth + 7 < halfMapWidth && y < this._mapSize.height - 3) {
+        this._spawnTile(new Point((noiseWidth + 7) * TILE_SIZE, y * TILE_SIZE), (halfMapWidth - noiseWidth - 7) * 2);
+      }
       // right grass
-      this._spawnTile(new Point((this._mapSize.width * this._tileSize) - ((noiseWidth+1) * this._tileSize), y * this._tileSize), noiseWidth);
+      this._spawnTile(new Point((this._mapSize.width * TILE_SIZE) - (noiseWidth * TILE_SIZE), y * TILE_SIZE), noiseWidth);
     }
   }
 
@@ -158,8 +164,6 @@ class MapManager {
     mapLevel++;
   }
 }
-
-DEBUG = true;
 
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');

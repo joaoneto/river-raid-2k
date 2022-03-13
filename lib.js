@@ -16,10 +16,11 @@ class Random {
   static seed = 0;
 
   static range(min, max) {
-    const x = Math.sin(Random.seed++) * 10000;
-    return Math.floor(min + x % (max - min));
+    const x = Math.abs(Math.sin(Random.seed++) * 10000);
+    return Math.floor((x % (max - min + 1)) + min);
   }
 }
+Random.seed = 1;
 
 class Trasform {
   position = Point.zero();
@@ -48,14 +49,55 @@ class Time {
   }
 }
 
+// https://en.wikipedia.org/wiki/Perlin_noise
 class Utils {
-  static lerp(a, b, t) {
-    return a + (b - a) * t;
+  static interpolate(a0, a1, w) {
+    return (a1 - a0) * w + a0;
   }
 
-  static noise(x, y) {
-    const n = x + y * 57;
-    return (1 + Math.sin(n)) / 2;
+  static randomGradient(ix,  iy) {
+    const w = 8;
+    const s = w / 2;
+
+    let a = ix;
+    let b = iy;
+    a *= 3284157443;
+    b ^= a << s | a >> w - s;
+    b *= 1911520717;
+    a ^= b << s | b >> w - s;
+    b *= 2048419325;
+
+    const random = a * (Math.PI / ~(~0 >>> 1));
+    const x = Math.cos(random);
+    const y = Math.sin(random);
+
+    return new Point(x, y);
+  }
+
+  static dotGridGradient(ix, iy, x, y) {
+    const gradient = Utils.randomGradient(ix, iy);
+    const distance = new Point(x, y);
+    return gradient.x * distance.x + gradient.y * distance.y;
+  }
+
+  static perlin(x, y) {
+    const x0 = Math.floor(x);
+    const x1 = x0 + 1;
+    const y0 = Math.floor(y);
+    const y1 = y0 + 1;
+
+    const sx = x - x0;
+    const sy = y - y0;
+
+    const n0 = Utils.dotGridGradient(x0, y0, sx, sy);
+    const n1 = Utils.dotGridGradient(x1, y0, sx - 1, sy);
+    const ix0 = Utils.interpolate(n0, n1, sx);
+
+    const n2 = Utils.dotGridGradient(x0, y1, sx, sy - 1);
+    const n3 = Utils.dotGridGradient(x1, y1, sx - 1, sy - 1);
+    const ix1 = Utils.interpolate(n2, n3, sx);
+
+    return Utils.interpolate(ix0, ix1, sy);
   }
 }
 
