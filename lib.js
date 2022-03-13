@@ -185,7 +185,7 @@ class Sprite {
 
     for (var y = 0; y < height; y++) {
       for (var x = 0; x < width; x++) {
-        tmpContext.fillStyle = PALETTE[matrix[x + (y * height)]];
+        tmpContext.fillStyle = PALETTE[matrix[y * width + x]];
         tmpContext.fillRect(x * scale - 1, y * scale - 1, scale + 1, scale + 1);
       }
     }
